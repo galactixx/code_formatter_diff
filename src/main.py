@@ -1,13 +1,13 @@
 from rich.console import Console
 from rich.syntax import Syntax
+from rich.panel import Panel
 from pathlib import Path
-from typing import List
 import autopep8
 import difflib
 import click
 import os
 
-from src.mutually_exclusive import MutuallyExclusiveOption
+from mutually_exclusive import MutuallyExclusiveOption
     
 @click.command()
 @click.option('--py-file',
@@ -29,6 +29,9 @@ from src.mutually_exclusive import MutuallyExclusiveOption
               type=int,
               default=1)
 def cli(py_file: str, path: str, max_line_length: int, aggresiveness: int) -> None:
+    if not py_file and not path:
+        click.echo('Error: Path or py file must be specified. Please try again.')
+        return
     console = Console()
     file_list = []
     if py_file:
@@ -55,7 +58,8 @@ def cli(py_file: str, path: str, max_line_length: int, aggresiveness: int) -> No
 
         # output diff to console
         syntax = Syntax(diff, "diff", theme="monokai", line_numbers=True)
-        console.print(syntax)
+        panel = Panel(syntax)
+        console.print(panel)
 
 if __name__ == '__main__':
     cli()
