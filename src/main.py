@@ -1,3 +1,5 @@
+from rich.console import Console
+from rich.syntax import Syntax
 from pathlib import Path
 from typing import List
 import autopep8
@@ -27,7 +29,7 @@ from src.mutually_exclusive import MutuallyExclusiveOption
               type=int,
               default=1)
 def cli(py_file: str, path: str, max_line_length: int, aggresiveness: int) -> None:
-    diff_list: List[tuple] = []
+    console = Console()
     file_list = []
     if py_file:
         if Path(py_file).suffix[1:] != 'py':
@@ -46,13 +48,14 @@ def cli(py_file: str, path: str, max_line_length: int, aggresiveness: int) -> No
             code = f.read()
         formatted_code = autopep8.fix_code(code, options={'aggressive': aggresiveness,
                                                           'max_line_length': max_line_length})
-        diff_list.append((code, formatted_code))
 
         # calculate delta of both files
-        diff = difflib.ndiff(a=code.splitlines(), b=formatted_code.splitlines())
-        with open('C:/Users/12158/Desktop/diff.txt', 'w') as f:
-            for line in diff:
-                f.write(line + '\n')
+        diff = difflib.unified_diff(a=code.splitlines(), b=formatted_code.splitlines())
+        diff = '\n'.join(diff)
+
+        # output diff to console
+        syntax = Syntax(diff, "diff", theme="monokai", line_numbers=True)
+        console.print(syntax)
 
 if __name__ == '__main__':
     cli()
