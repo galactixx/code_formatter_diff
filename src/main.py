@@ -1,3 +1,4 @@
+from rich.markdown import Markdown
 from rich.console import Console
 from rich.syntax import Syntax
 from rich.panel import Panel
@@ -7,7 +8,7 @@ import difflib
 import click
 import os
 
-from mutually_exclusive import MutuallyExclusiveOption
+from src.mutually_exclusive import MutuallyExclusiveOption
     
 @click.command()
 @click.option('--py-file',
@@ -29,21 +30,21 @@ from mutually_exclusive import MutuallyExclusiveOption
               type=int,
               default=1)
 def cli(py_file: str, path: str, max_line_length: int, aggresiveness: int) -> None:
-    if not py_file and not path:
-        click.echo('Error: Path or py file must be specified. Please try again.')
-        return
     console = Console()
     file_list = []
+    if not py_file and not path:
+        console.print(Markdown('**Error**: *Path or py file must be specified. Please try again*'))
+        return
     if py_file:
         if Path(py_file).suffix[1:] != 'py':
-            click.echo('Error: File specified is not a py file, please try again and specify a py file.')
+            console.print(Markdown('**Error**: *File specified is not a py file, please try again and specify a py file*'))
             return
         file_list.append(py_file)
     else:
         py_files = [os.path.join(path, i) for i in os.listdir(path) if 
                     not os.path.isdir(os.path.join(path, i)) and Path(i).suffix[1:] == 'py']
         if not file_list:
-            click.echo('Error: There are no py files in specified path, try again and specify path with py files.')
+            console.print(Markdown('**Error**: *There are no py files in specified path, try again and specify path with py files.*'))
             return
         file_list.extend(py_files)
     for file in file_list:
@@ -56,10 +57,27 @@ def cli(py_file: str, path: str, max_line_length: int, aggresiveness: int) -> No
         diff = difflib.unified_diff(a=code.splitlines(), b=formatted_code.splitlines())
         diff = '\n'.join(diff)
 
+        if formatted_code == code:
+            console.print(Markdown('**There were no changes to be made after re-formatting**'))
+            continue
+
         # output diff to console
         syntax = Syntax(diff, "diff", theme="monokai", line_numbers=True)
-        panel = Panel(syntax)
+        panel = Panel(syntax, title=file, padding=0)
         console.print(panel)
+
+        # prompt the user
+        response = input(f"Do you want to make these changes to {file}? (y/n): ")
+
+        # check the response
+        if response.lower() == 'y':
+
+            # make changes to file
+            with open(file, 'w') as f:
+                f.write(formatted_code)
+            console.print(Markdown(f"**Changes {file} were made**"))
+        else:
+            console.print(Markdown(f"**Changes to {file} were not made**"))
 
 if __name__ == '__main__':
     cli()
