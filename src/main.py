@@ -30,6 +30,7 @@ from src.mutually_exclusive import MutuallyExclusiveOption
               type=int,
               default=1)
 def cli(py_file: str, path: str, max_line_length: int, aggresiveness: int) -> None:
+    """CLI program to format python files according to PEP8 standards and then output a diff."""
     console = Console()
     file_list = []
     if not py_file and not path:
@@ -43,7 +44,7 @@ def cli(py_file: str, path: str, max_line_length: int, aggresiveness: int) -> No
     else:
         py_files = [os.path.join(path, i) for i in os.listdir(path) if 
                     not os.path.isdir(os.path.join(path, i)) and Path(i).suffix[1:] == 'py']
-        if not file_list:
+        if not py_files:
             console.print(Markdown('**Error**: *There are no py files in specified path, try again and specify path with py files.*'))
             return
         file_list.extend(py_files)
@@ -66,18 +67,22 @@ def cli(py_file: str, path: str, max_line_length: int, aggresiveness: int) -> No
         panel = Panel(syntax, title=file, padding=0)
         console.print(panel)
 
-        # prompt the user
-        response = input(f"Do you want to make these changes to {file}? (y/n): ")
-
         # check the response
-        if response.lower() == 'y':
+        while True:
+            # prompt the user
+            response = click.prompt(f"Do you want to make these changes to {file}? (y/n): ")
+            if response.lower() == 'y':
 
-            # make changes to file
-            with open(file, 'w') as f:
-                f.write(formatted_code)
-            console.print(Markdown(f"**Changes {file} were made**"))
-        else:
-            console.print(Markdown(f"**Changes to {file} were not made**"))
+                # make changes to file
+                with open(file, 'w') as f:
+                    f.write(formatted_code)
+                console.print(Markdown(f"**Changes to {file} were made**"))
+                break
+            elif response.lower() == 'n':
+                console.print(Markdown(f"**Changes to {file} were not made**"))
+                break
+            else:
+                console.print(Markdown(f"**Incorrect input, only (y/n) is accepted**"))
 
 if __name__ == '__main__':
     cli()
