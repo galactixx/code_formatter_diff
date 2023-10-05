@@ -67,10 +67,11 @@ def cli(py_file: str, path: str, max_line_length: int, aggresiveness: int) -> No
         panel = Panel(syntax, title=file, padding=0)
         console.print(panel)
 
-        # check the response
         while True:
             # prompt the user
             response = click.prompt(f"Do you want to make these changes to {file}? (y/n): ")
+
+            # check the response
             if response.lower() == 'y':
 
                 # make changes to file
